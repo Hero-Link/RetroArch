@@ -3610,6 +3610,20 @@ static void ozone_draw_sidebar(
       y += ozone->dimensions.sidebar_entry_height + ozone->dimensions.sidebar_entry_padding_vertical;
    }
 
+   /* Bottom-align: shift all sidebar entries to the bottom */
+   {
+      int bottom_max  = (int)video_height
+                      - (int)ozone->dimensions.footer_height
+                      - (int)ozone->dimensions.sidebar_gradient_height
+                      - (int)ozone->dimensions.sidebar_padding_vertical;
+      int y_shift = bottom_max - (int)y;
+      if (y_shift > 0)
+      {
+         selection_y       += (unsigned)y_shift;
+         selection_old_y   += (unsigned)y_shift;
+      }
+   }
+
    entry_width = (unsigned)ozone->dimensions_sidebar_width - ozone->dimensions.sidebar_padding_horizontal * 2;
 
    /* Cursor — full sidebar width, always drawn */
@@ -3640,8 +3654,24 @@ static void ozone_draw_sidebar(
             0.0f,
             mymat);
 
-   /* Menu tabs */
-   y = ozone->dimensions.header_height + ozone->dimensions.spacer_1px + ozone->dimensions.sidebar_padding_vertical;
+   /* Menu tabs — bottom-aligned */
+   {
+      float top_y  = ozone->dimensions.header_height
+                   + ozone->dimensions.spacer_1px
+                   + ozone->dimensions.sidebar_padding_vertical;
+      int total    = (int)(ozone->system_tab_end + 1 + horizontal_list_size);
+      float total_h = total * ozone->dimensions.sidebar_entry_height
+                    + (total - 1) * ozone->dimensions.sidebar_entry_padding_vertical
+                    + (horizontal_list_size > 0
+                        ? ozone->dimensions.sidebar_entry_padding_vertical + ozone->dimensions.spacer_1px
+                        : 0);
+      float bottom_max = (int)video_height
+                       - (int)ozone->dimensions.footer_height
+                       - (int)ozone->dimensions.sidebar_gradient_height
+                       - (int)ozone->dimensions.sidebar_padding_vertical;
+      y = bottom_max - total_h;
+      if (y < top_y) y = top_y;
+   }
    if (dispctx && dispctx->blend_begin)
       dispctx->blend_begin(userdata);
 
