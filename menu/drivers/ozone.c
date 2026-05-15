@@ -3804,7 +3804,7 @@ static void ozone_draw_sidebar(
             ozone->dimensions.spacer_1px,
             video_width,
             video_height,
-            ozone->theme->entries_border,
+            ozone->pure_white,
             NULL);
 
       y += ozone->dimensions.sidebar_entry_padding_vertical + ozone->dimensions.spacer_1px;
