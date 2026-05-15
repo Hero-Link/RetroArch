@@ -1082,8 +1082,8 @@ static const float ozone_border_1_solarized_light[16]    = COLOR_HEX_TO_FLOAT(0x
 static const float ozone_border_0_purple_rain[16]        = COLOR_HEX_TO_FLOAT(0xC3A0E0, 1.0f);
 static const float ozone_border_1_purple_rain[16]        = COLOR_HEX_TO_FLOAT(0x8C3DCC, 1.0f);
 
-static const float ozone_border_0_nintendo_switch_light[16] = COLOR_HEX_TO_FLOAT(0xE60012, 1.0f);
-static const float ozone_border_1_nintendo_switch_light[16] = COLOR_HEX_TO_FLOAT(0x00C3E3, 1.0f);
+static const float ozone_border_0_nintendo_switch_light[16] = COLOR_HEX_TO_FLOAT(0x000000, 0.0f);
+static const float ozone_border_1_nintendo_switch_light[16] = COLOR_HEX_TO_FLOAT(0x000000, 0.0f);
 
 static ozone_theme_t ozone_theme_light = {
    COLOR_HEX_TO_FLOAT(0xEBEBEB, 1.00f),                  /* background */
@@ -1656,17 +1656,17 @@ static ozone_theme_t ozone_theme_nintendo_switch_light = {
    /* Float colors for quads and icons */
    COLOR_HEX_TO_FLOAT(0x8C8C8C, 1.0f),                    /* header_footer_separator */
    COLOR_HEX_TO_FLOAT(0xFFFFFF, 1.0f),                    /* text */
-   COLOR_HEX_TO_FLOAT(0x3A3A3A, 1.0f),                    /* selection */
+   COLOR_HEX_TO_FLOAT(0xFFFFFF, 1.0f),                    /* selection */
    COLOR_HEX_TO_FLOAT(0xE60012, 1.0f),                    /* selection_border */
    COLOR_HEX_TO_FLOAT(0x404040, 1.0f),                    /* entries_border */
    COLOR_HEX_TO_FLOAT(0xFFFFFF, 1.0f),                    /* entries_icon */
-   COLOR_HEX_TO_FLOAT(0xFF4444, 1.0f),                    /* text_selected */
+   COLOR_HEX_TO_FLOAT(0xFE0000, 1.0f),                    /* text_selected */
    COLOR_HEX_TO_FLOAT(0x282828, 1.0f),                    /* message_background */
 
    /* RGBA colors for text */
    0xFFFFFFFF,                                            /* text_rgba */
    0xFFFFFFFF,                                            /* text_sidebar_rgba */
-   0xFF4444FF,                                            /* text_selected_rgba */
+   0xFE0000FF,                                            /* text_selected_rgba */
    0x8C8C8CFF,                                            /* text_sublabel_rgba */
 
    /* Screensaver 'tint' (RGB24) */
@@ -1683,7 +1683,7 @@ static ozone_theme_t ozone_theme_nintendo_switch_light = {
 
    {0},                                                   /* textures */
 
-   "nintendo_switch_light"                                /* name */
+   NULL                                                   /* name — fallback cursor (no texture) */
 };
 
 static ozone_theme_t *ozone_themes[] = {
@@ -3258,27 +3258,6 @@ static void ozone_draw_cursor_slice(
          mymat
          );
 
-   /* Tainted border */
-   gfx_display_draw_texture_slice(
-         p_disp,
-         userdata,
-         video_width,
-         video_height,
-         slice_x,
-         slice_y,
-         slice_w,
-         slice_h,
-         slice_new_w,
-         slice_new_h,
-         video_width,
-         video_height,
-         ozone->theme_dynamic.cursor_border,
-         offset,
-         scale_factor,
-         ozone->textures[OZONE_TEXTURE_CURSOR_BORDER],
-         mymat
-         );
-
    if (dispctx && dispctx->blend_end)
       dispctx->blend_end(userdata);
 }
@@ -3633,20 +3612,19 @@ static void ozone_draw_sidebar(
 
    entry_width = (unsigned)ozone->dimensions_sidebar_width - ozone->dimensions.sidebar_padding_horizontal * 2;
 
-   /* Cursor */
-   if (ozone->flags & OZONE_FLAG_CURSOR_IN_SIDEBAR)
-      ozone_draw_cursor(
-            ozone,
-            p_disp,
-            userdata,
-            video_width,
-            video_height,
-            ozone->sidebar_offset + ozone->dimensions.sidebar_padding_horizontal + ozone->dimensions.spacer_3px,
-            entry_width - ozone->dimensions.spacer_5px,
-            ozone->dimensions.sidebar_entry_height + ozone->dimensions.spacer_1px,
-            (int)((float)selection_y + ozone->animations.scroll_y_sidebar),
-            ozone->animations.cursor_alpha,
-            mymat);
+   /* Cursor — full sidebar width, always drawn */
+   ozone_draw_cursor(
+         ozone,
+         p_disp,
+         userdata,
+         video_width,
+         video_height,
+         ozone->sidebar_offset,
+         (unsigned)ozone->dimensions_sidebar_width,
+         ozone->dimensions.sidebar_entry_height + ozone->dimensions.spacer_1px,
+         (int)((float)selection_y + ozone->animations.scroll_y_sidebar),
+         1.0f,
+         mymat);
 
    if (ozone->flags & OZONE_FLAG_CURSOR_IN_SIDEBAR_OLD)
       ozone_draw_cursor(
@@ -3655,11 +3633,11 @@ static void ozone_draw_sidebar(
             userdata,
             video_width,
             video_height,
-            ozone->sidebar_offset + ozone->dimensions.sidebar_padding_horizontal + ozone->dimensions.spacer_3px,
-            entry_width - ozone->dimensions.spacer_5px,
+            ozone->sidebar_offset,
+            (unsigned)ozone->dimensions_sidebar_width,
             ozone->dimensions.sidebar_entry_height + ozone->dimensions.spacer_1px,
             (int)((float)selection_old_y + ozone->animations.scroll_y_sidebar),
-            1 - ozone->animations.cursor_alpha,
+            0.0f,
             mymat);
 
    /* Menu tabs */
@@ -6332,11 +6310,20 @@ border_iterate:
 
          /* Cheevos badges should not be recolored */
          if (!((entry.type >= MENU_SETTINGS_CHEEVOS_START) && (entry.type < MENU_SETTINGS_NETPLAY_ROOMS_START)))
-            icon_color = ozone->theme_dynamic.entries_icon;
+         {
+            if (entry_selected && !(ozone->flags & OZONE_FLAG_CURSOR_IN_SIDEBAR))
+               icon_color = ozone->theme->text_selected;
+            else
+            {
+               icon_color = ozone->theme_dynamic.entries_icon;
+               gfx_display_set_alpha(icon_color, alpha);
+            }
+         }
          else
+         {
             icon_color = ozone->pure_white;
-
-         gfx_display_set_alpha(icon_color, alpha);
+            gfx_display_set_alpha(icon_color, alpha);
+         }
 
          if (dispctx)
          {
@@ -6392,7 +6379,7 @@ border_iterate:
                   + scroll_y,
             video_width,
             video_height,
-            COLOR_TEXT_ALPHA(ozone->theme->text_rgba, alpha_uint32),
+            COLOR_TEXT_ALPHA(((entry_selected && !(ozone->flags & OZONE_FLAG_CURSOR_IN_SIDEBAR)) ? ozone->theme->text_selected_rgba : ozone->theme->text_rgba), alpha_uint32),
             TEXT_ALIGN_LEFT,
             1.0f,
             false,
