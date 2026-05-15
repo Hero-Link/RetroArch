@@ -841,6 +841,12 @@ static const float ozone_sidebar_gradient_bottom_solarized_light[16]        = {
    1.0000000f, 1.0000000f, 0.9294118f, 1.0f,
 };
 
+static const float ozone_sidebar_gradient_top_nintendo_switch_light[16]    =
+   COLOR_HEX_TO_FLOAT(0xFE0000, 1.0f);
+
+static const float ozone_sidebar_gradient_bottom_nintendo_switch_light[16] =
+   COLOR_HEX_TO_FLOAT(0xFE0000, 1.0f);
+
 static const float ozone_sidebar_background_gray_dark[16]                   =
    COLOR_HEX_TO_FLOAT(0x101010, 0.0f);
 
@@ -932,6 +938,9 @@ static const float ozone_sidebar_background_purple_rain[16] = {
    0.0862745f, 0.0f, 0.1294117f, 1.0f,
    0.0862745f, 0.0f, 0.1294117f, 1.0f,
 };
+
+static const float ozone_sidebar_background_nintendo_switch_light[16] =
+   COLOR_HEX_TO_FLOAT(0xFE0000, 1.0f);
 
 static const float ozone_background_libretro_running_gray_dark[16]          =
    COLOR_HEX_TO_FLOAT(0x101010, 1.0f);
@@ -1029,6 +1038,9 @@ static const float ozone_background_libretro_running_purple_rain[16] = {
    0.0862745f, 0.0f, 0.1294117f, 1.0f,
 };
 
+static const float ozone_background_libretro_running_nintendo_switch_light[16] =
+   COLOR_HEX_TO_FLOAT(0x303030, 1.0f);
+
 static const float ozone_border_gray[16]                 = COLOR_HEX_TO_FLOAT(0x303030, 1.0f);
 
 static const float ozone_border_0_light[16]              = COLOR_HEX_TO_FLOAT(0x50EFD9, 1.00);
@@ -1069,6 +1081,9 @@ static const float ozone_border_1_solarized_light[16]    = COLOR_HEX_TO_FLOAT(0x
 
 static const float ozone_border_0_purple_rain[16]        = COLOR_HEX_TO_FLOAT(0xC3A0E0, 1.0f);
 static const float ozone_border_1_purple_rain[16]        = COLOR_HEX_TO_FLOAT(0x8C3DCC, 1.0f);
+
+static const float ozone_border_0_nintendo_switch_light[16] = COLOR_HEX_TO_FLOAT(0xE60012, 1.0f);
+static const float ozone_border_1_nintendo_switch_light[16] = COLOR_HEX_TO_FLOAT(0x00C3E3, 1.0f);
 
 static ozone_theme_t ozone_theme_light = {
    COLOR_HEX_TO_FLOAT(0xEBEBEB, 1.00f),                  /* background */
@@ -1633,6 +1648,44 @@ static ozone_theme_t ozone_theme_selenium = {
    NULL,                                            /* name */
 };
 
+static ozone_theme_t ozone_theme_nintendo_switch_light = {
+   /* Background color */
+   COLOR_HEX_TO_FLOAT(0x303030, 1.0f),                     /* background */
+   ozone_background_libretro_running_nintendo_switch_light, /* background_libretro_running */
+
+   /* Float colors for quads and icons */
+   COLOR_HEX_TO_FLOAT(0x8C8C8C, 1.0f),                    /* header_footer_separator */
+   COLOR_HEX_TO_FLOAT(0xFFFFFF, 1.0f),                    /* text */
+   COLOR_HEX_TO_FLOAT(0x3A3A3A, 1.0f),                    /* selection */
+   COLOR_HEX_TO_FLOAT(0xE60012, 1.0f),                    /* selection_border */
+   COLOR_HEX_TO_FLOAT(0x404040, 1.0f),                    /* entries_border */
+   COLOR_HEX_TO_FLOAT(0xFFFFFF, 1.0f),                    /* entries_icon */
+   COLOR_HEX_TO_FLOAT(0xFF4444, 1.0f),                    /* text_selected */
+   COLOR_HEX_TO_FLOAT(0x282828, 1.0f),                    /* message_background */
+
+   /* RGBA colors for text */
+   0xFFFFFFFF,                                            /* text_rgba */
+   0xFFFFFFFF,                                            /* text_sidebar_rgba */
+   0xFF4444FF,                                            /* text_selected_rgba */
+   0x8C8C8CFF,                                            /* text_sublabel_rgba */
+
+   /* Screensaver 'tint' (RGB24) */
+   0x303030,                                              /* screensaver_tint */
+
+   /* Sidebar color */
+   ozone_sidebar_background_nintendo_switch_light,        /* sidebar_background */
+   ozone_sidebar_gradient_top_nintendo_switch_light,      /* sidebar_top_gradient */
+   ozone_sidebar_gradient_bottom_nintendo_switch_light,   /* sidebar_bottom_gradient */
+
+   /* Fancy cursor colors */
+   ozone_border_0_nintendo_switch_light,                  /* cursor_border_0 */
+   ozone_border_1_nintendo_switch_light,                  /* cursor_border_1 */
+
+   {0},                                                   /* textures */
+
+   "nintendo_switch_light"                                /* name */
+};
+
 static ozone_theme_t *ozone_themes[] = {
    &ozone_theme_light,
    &ozone_theme_dark,
@@ -1649,6 +1702,7 @@ static ozone_theme_t *ozone_themes[] = {
    &ozone_theme_purple_rain,
    &ozone_theme_selenium,
    &ozone_theme_evergarden,
+   &ozone_theme_nintendo_switch_light,
 };
 
 /* Forward declarations */
@@ -1785,6 +1839,9 @@ static void ozone_set_color_theme(ozone_handle_t *ozone,
       case OZONE_COLOR_THEME_EVERGARDEN:
          theme = &ozone_theme_evergarden;
          break;
+      case OZONE_COLOR_THEME_NINTENDO_SWITCH_LIGHT:
+         theme = &ozone_theme_nintendo_switch_light;
+         break;
       default:
          break;
    }
@@ -1907,7 +1964,8 @@ static void ozone_set_background_running_opacity(
 
    /* Set sidebar background to half opacity if transparent —
     * now mutates instance copies, not the const theme arrays */
-   if (ozone->sidebar_background[3] > 0)
+   if (ozone->sidebar_background[3] > 0.0f &&
+       ozone->sidebar_background[3] < 1.0f)
    {
       gfx_display_set_alpha(ozone->sidebar_top_gradient, 0.5f);
       gfx_display_set_alpha(ozone->sidebar_background, 0.5f);
