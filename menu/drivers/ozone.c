@@ -3624,33 +3624,51 @@ static void ozone_draw_sidebar(
 
    entry_width = (unsigned)ozone->dimensions_sidebar_width - ozone->dimensions.sidebar_padding_horizontal * 2;
 
-   /* Cursor — full sidebar width, always drawn */
-   ozone_draw_cursor(
-         ozone,
-         p_disp,
-         userdata,
-         video_width,
-         video_height,
-         ozone->sidebar_offset,
-         (unsigned)ozone->dimensions_sidebar_width,
-         ozone->dimensions.sidebar_entry_height + ozone->dimensions.spacer_1px,
-         (int)((float)selection_y + ozone->animations.scroll_y_sidebar),
-         1.0f,
-         mymat);
+   /* Cursor — full width when expanded, square when collapsed */
+   {
+      unsigned cursor_w = ozone->sidebar_collapsed
+         ? (unsigned)(ozone->dimensions.sidebar_entry_height + ozone->dimensions.spacer_1px)
+         : (unsigned)ozone->dimensions_sidebar_width;
+      int cursor_x = ozone->sidebar_collapsed
+         ? ozone->sidebar_offset + ((int)ozone->dimensions_sidebar_width - (int)cursor_w) / 2
+         : ozone->sidebar_offset;
 
-   if (ozone->flags & OZONE_FLAG_CURSOR_IN_SIDEBAR_OLD)
       ozone_draw_cursor(
             ozone,
             p_disp,
             userdata,
             video_width,
             video_height,
-            ozone->sidebar_offset,
-            (unsigned)ozone->dimensions_sidebar_width,
+            cursor_x,
+            cursor_w,
+            ozone->dimensions.sidebar_entry_height + ozone->dimensions.spacer_1px,
+            (int)((float)selection_y + ozone->animations.scroll_y_sidebar),
+            1.0f,
+            mymat);
+   }
+
+   if (ozone->flags & OZONE_FLAG_CURSOR_IN_SIDEBAR_OLD)
+   {
+      unsigned cursor_w = ozone->sidebar_collapsed
+         ? (unsigned)(ozone->dimensions.sidebar_entry_height + ozone->dimensions.spacer_1px)
+         : (unsigned)ozone->dimensions_sidebar_width;
+      int cursor_x = ozone->sidebar_collapsed
+         ? ozone->sidebar_offset + ((int)ozone->dimensions_sidebar_width - (int)cursor_w) / 2
+         : ozone->sidebar_offset;
+
+      ozone_draw_cursor(
+            ozone,
+            p_disp,
+            userdata,
+            video_width,
+            video_height,
+            cursor_x,
+            cursor_w,
             ozone->dimensions.sidebar_entry_height + ozone->dimensions.spacer_1px,
             (int)((float)selection_old_y + ozone->animations.scroll_y_sidebar),
             0.0f,
             mymat);
+   }
 
    /* Menu tabs — bottom-aligned */
    {
