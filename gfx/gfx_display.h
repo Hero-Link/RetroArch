@@ -260,6 +260,16 @@ void gfx_display_draw_quad(
       float *color,
       uintptr_t *texture);
 
+void gfx_display_draw_round_rect(
+      gfx_display_t *p_disp,
+      void *data,
+      unsigned video_width,
+      unsigned video_height,
+      int x, int y, unsigned w, unsigned h,
+      unsigned radius,
+      unsigned width, unsigned height,
+      float *color);
+
 void gfx_display_draw_texture_slice(
       gfx_display_t *p_disp,
       void *userdata,

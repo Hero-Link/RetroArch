@@ -545,6 +545,92 @@ void gfx_display_draw_quad(
       dispctx->blend_end(data);
 }
 
+static void gfx_display_draw_corner_quads(
+      gfx_display_t *p_disp, void *data,
+      unsigned video_width, unsigned video_height,
+      int cx, int cy, unsigned r,
+      int corner_type, /* 0:左上, 1:右上, 2:左下, 3:右下 */
+      unsigned width, unsigned height, float *color)
+{
+   unsigned i;
+   float rf = (float)r;
+   
+   for (i = 0; i < r; i++)
+   {
+      float dy;
+      int qx, qy, w;
+
+      /* 计算 Y坐标 和 距离圆心的 Y轴偏移量 */
+      if (corner_type == 0 || corner_type == 1) {
+         qy = cy - r + i;                   /* 屏幕上半区：从上往下画 */
+         dy = (float)r - (float)i - 0.5f;   /* 取像素中心点采样 */
+      } else {
+         qy = cy + i;                       /* 屏幕下半区：从上往下画 */
+         dy = (float)i + 0.5f;
+      }
+
+      /* 勾股定理算 X轴宽度： x = sqrt(r^2 - y^2) */
+      w = (int)ceilf(sqrtf(rf * rf - dy * dy));
+
+      /* 计算 X起始坐标 */
+      if (corner_type == 0 || corner_type == 2)
+         qx = cx - w;   /* 左边的角，往左延伸 */
+      else
+         qx = cx;       /* 右边的角，往右延伸 */
+
+      /* 画一根 1像素高的细横条 */
+      gfx_display_draw_quad(p_disp, data, video_width, video_height,
+            qx, qy, w, 1, width, height, color, NULL);
+   }
+}
+
+void gfx_display_draw_round_rect(
+      gfx_display_t *p_disp,
+      void *data,
+      unsigned video_width,
+      unsigned video_height,
+      int x, int y, unsigned w, unsigned h,
+      unsigned radius,
+      unsigned width, unsigned height,
+      float *color)
+{
+   int r = (int)radius;
+   int iw = (int)w;
+   int ih = (int)h;
+
+   if (w <= (unsigned)(r * 2) || h <= (unsigned)(r * 2))
+   {
+      gfx_display_draw_quad(p_disp, data, video_width, video_height,
+            x, y, w, h, width, height, color, NULL);
+      return;
+   }
+
+   /* 1. 画中间的主体（5 个不重叠的矩形组成加号） */
+   gfx_display_draw_quad(p_disp, data, video_width, video_height,
+         x + r, y + r, w - r * 2, h - r * 2, width, height, color, NULL); /* 中间 */
+   gfx_display_draw_quad(p_disp, data, video_width, video_height,
+         x + r, y, w - r * 2, r, width, height, color, NULL); /* 顶边 */
+   gfx_display_draw_quad(p_disp, data, video_width, video_height,
+         x + r, y + ih - r, w - r * 2, r, width, height, color, NULL); /* 底边 */
+   gfx_display_draw_quad(p_disp, data, video_width, video_height,
+         x, y + r, r, h - r * 2, width, height, color, NULL); /* 左边 */
+   gfx_display_draw_quad(p_disp, data, video_width, video_height,
+         x + iw - r, y + r, r, h - r * 2, width, height, color, NULL); /* 右边 */
+
+   /* 2. 用水平扫描线法填满四个角 */
+   gfx_display_draw_corner_quads(p_disp, data, video_width, video_height,
+         x + r, y + r, r, 0, width, height, color); /* 左上 */
+   
+   gfx_display_draw_corner_quads(p_disp, data, video_width, video_height,
+         x + iw - r, y + r, r, 1, width, height, color); /* 右上 */
+         
+   gfx_display_draw_corner_quads(p_disp, data, video_width, video_height,
+         x + r, y + ih - r, r, 2, width, height, color); /* 左下 */
+         
+   gfx_display_draw_corner_quads(p_disp, data, video_width, video_height,
+         x + iw - r, y + ih - r, r, 3, width, height, color); /* 右下 */
+}
+
 /* Draw the texture split into 9 sections, without scaling the corners.
  * The middle sections will only scale in the X axis, and the side
  * sections will only scale in the Y axis. */
