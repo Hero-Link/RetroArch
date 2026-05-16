@@ -3593,20 +3593,16 @@ static void ozone_draw_sidebar(
    for (i = 0; i < ozone->system_tab_end + horizontal_list_size + 1; i++)
    {
       if (i == ozone->categories_selection_ptr)
-      {
          selection_y = (unsigned)y;
-         if (ozone->categories_selection_ptr > ozone->system_tab_end)
-            selection_y += ozone->dimensions.sidebar_entry_padding_vertical + ozone->dimensions.spacer_1px;
-      }
 
       if (i == ozone->categories_active_idx_old)
-      {
          selection_old_y = (unsigned)y;
-         if (ozone->categories_active_idx_old > ozone->system_tab_end)
-            selection_old_y += ozone->dimensions.sidebar_entry_padding_vertical + ozone->dimensions.spacer_1px;
-      }
 
       y += ozone->dimensions.sidebar_entry_height + ozone->dimensions.sidebar_entry_padding_vertical;
+
+      /* Separator between system tabs and console tabs */
+      if (i == (unsigned)ozone->system_tab_end && horizontal_list_size > 0)
+         y += ozone->dimensions.sidebar_entry_padding_vertical + ozone->dimensions.spacer_1px;
    }
 
    /* Bottom-align: leave one entry height below last item */
@@ -3631,10 +3627,14 @@ static void ozone_draw_sidebar(
 
       if (ozone->sidebar_collapsed)
       {
-         /* Square with rounded corners, centered */
+         /* Square with rounded corners, centered — use local copy
+          * so content cursor animation doesn't corrupt alpha */
          unsigned cursor_w = cursor_h;
          int      cursor_x = ozone->sidebar_offset
                            + ((int)ozone->dimensions_sidebar_width - (int)cursor_w) / 2;
+         float col[16];
+         memcpy(col, ozone->theme_dynamic.selection, sizeof(col));
+         gfx_display_set_alpha(col, 1.0f);
          gfx_display_draw_round_rect(
                p_disp, userdata,
                video_width, video_height,
@@ -3642,7 +3642,7 @@ static void ozone_draw_sidebar(
                (int)((float)selection_y + ozone->animations.scroll_y_sidebar),
                cursor_w, cursor_h, 8,
                video_width, video_height,
-               ozone->theme_dynamic.selection);
+               col);
       }
       else
       {
@@ -3667,6 +3667,9 @@ static void ozone_draw_sidebar(
          unsigned cursor_w = cursor_h;
          int      cursor_x = ozone->sidebar_offset
                            + ((int)ozone->dimensions_sidebar_width - (int)cursor_w) / 2;
+         float col[16];
+         memcpy(col, ozone->theme_dynamic.selection, sizeof(col));
+         gfx_display_set_alpha(col, 0.0f);
          gfx_display_draw_round_rect(
                p_disp, userdata,
                video_width, video_height,
@@ -3674,7 +3677,7 @@ static void ozone_draw_sidebar(
                (int)((float)selection_old_y + ozone->animations.scroll_y_sidebar),
                cursor_w, cursor_h, 8,
                video_width, video_height,
-               ozone->theme_dynamic.selection);
+               col);
       }
       else
       {
@@ -3695,8 +3698,8 @@ static void ozone_draw_sidebar(
                    + ozone->dimensions.spacer_1px
                    + ozone->dimensions.sidebar_padding_vertical;
       int total    = (int)(ozone->system_tab_end + 1 + horizontal_list_size);
-      float total_h = total * ozone->dimensions.sidebar_entry_height
-                    + (total - 1) * ozone->dimensions.sidebar_entry_padding_vertical
+      float total_h = total * (ozone->dimensions.sidebar_entry_height
+                             + ozone->dimensions.sidebar_entry_padding_vertical)
                     + (horizontal_list_size > 0
                         ? ozone->dimensions.sidebar_entry_padding_vertical + ozone->dimensions.spacer_1px
                         : 0);
