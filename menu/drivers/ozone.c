@@ -93,7 +93,7 @@
 /* > 'SIDEBAR_WIDTH' must be kept in sync with
  *   menu driver metrics */
 #define SIDEBAR_WIDTH                 408
-#define SIDEBAR_X_PADDING             40
+#define SIDEBAR_X_PADDING             12        //左侧图标外边距
 #define SIDEBAR_Y_PADDING             20
 #define SIDEBAR_ENTRY_HEIGHT          50
 #define SIDEBAR_ENTRY_Y_PADDING       10
