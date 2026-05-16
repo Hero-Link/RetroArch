@@ -79,6 +79,7 @@
 
 #define HEADER_HEIGHT                 87
 #define FOOTER_HEIGHT                 78
+#define CONTENT_TOP_PAD               40              //右边选择栏初始位置距顶部距离
 
 #define ENTRY_PADDING_HORIZONTAL_HALF 40
 #define ENTRY_PADDING_HORIZONTAL_FULL 130
@@ -3607,12 +3608,12 @@ static void ozone_draw_sidebar(
       y += ozone->dimensions.sidebar_entry_height + ozone->dimensions.sidebar_entry_padding_vertical;
    }
 
-   /* Bottom-align: shift all sidebar entries to the bottom */
+   /* Bottom-align: leave one entry height below last item */
    {
       int bottom_max  = (int)video_height
                       - (int)ozone->dimensions.footer_height
                       - (int)ozone->dimensions.sidebar_gradient_height
-                      - (int)ozone->dimensions.sidebar_padding_vertical;
+                      - (int)ozone->dimensions.sidebar_entry_height;
       int y_shift = bottom_max - (int)y;
       if (y_shift > 0)
       {
@@ -3665,7 +3666,7 @@ static void ozone_draw_sidebar(
       float bottom_max = (int)video_height
                        - (int)ozone->dimensions.footer_height
                        - (int)ozone->dimensions.sidebar_gradient_height
-                       - (int)ozone->dimensions.sidebar_padding_vertical;
+                       - (int)ozone->dimensions.sidebar_entry_height;
       y = bottom_max - total_h;
       if (y < top_y) y = top_y;
    }
@@ -4808,7 +4809,7 @@ static void ozone_list_cache(void *data,
 
    /* Deep copy visible elements */
    video_info_height          = ozone->last_height;
-   y                          = ozone->dimensions.header_height + ozone->dimensions.entry_padding_vertical;
+   y                          = CONTENT_TOP_PAD * ozone->last_scale_factor + ozone->dimensions.entry_padding_vertical;
    entries_end                = MENU_LIST_GET_SELECTION(menu_list, 0)->size;
    selection_buf              = MENU_LIST_GET_SELECTION(menu_list, 0);
    bottom_boundary            = video_info_height - ozone->dimensions.header_height - ozone->dimensions.footer_height;
@@ -4823,7 +4824,7 @@ static void ozone_list_cache(void *data,
       if (!node || !node->height)
          continue;
 
-      if (y + ozone->animations.scroll_y + node->height + 20 * scale_factor < ozone->dimensions.header_height + ozone->dimensions.entry_padding_vertical)
+      if (y + ozone->animations.scroll_y + node->height + 20 * scale_factor < CONTENT_TOP_PAD * ozone->last_scale_factor + ozone->dimensions.entry_padding_vertical)
       {
          first++;
          goto text_iterate;
@@ -5921,7 +5922,7 @@ static void ozone_draw_entries(
    float scale_factor                = ozone->last_scale_factor;
    gfx_display_ctx_driver_t *dispctx = p_disp->dispctx;
    size_t entries_end                = selection_buf ? selection_buf->size : 0;
-   size_t y                          = ozone->dimensions.header_height
+   size_t y                          = CONTENT_TOP_PAD * ozone->last_scale_factor
          + ozone->dimensions.spacer_1px
          + ozone->dimensions.entry_padding_vertical;
    float sidebar_offset              = ozone->sidebar_offset;
@@ -5979,7 +5980,7 @@ static void ozone_draw_entries(
       if (!node || (ozone->flags & OZONE_FLAG_EMPTY_PLAYLIST))
          goto border_iterate;
 
-      if (y + scroll_y + node->height + 20 * scale_factor < ozone->dimensions.header_height + ozone->dimensions.entry_padding_vertical)
+      if (y + scroll_y + node->height + 20 * scale_factor < CONTENT_TOP_PAD * ozone->last_scale_factor + ozone->dimensions.entry_padding_vertical)
          goto border_iterate;
       else if (y + scroll_y - node->height - 20 * scale_factor > bottom_boundary)
       {
@@ -6063,7 +6064,7 @@ border_iterate:
             mymat);
 
    /* Icons + text */
-   y = ozone->dimensions.header_height + ozone->dimensions.spacer_1px + ozone->dimensions.entry_padding_vertical;
+   y = CONTENT_TOP_PAD * ozone->last_scale_factor + ozone->dimensions.spacer_1px + ozone->dimensions.entry_padding_vertical;
 
    if (old_list)
       y += ozone->old_list_offset_y;
@@ -6111,7 +6112,7 @@ border_iterate:
       if (!node)
          continue;
 
-      if (y + scroll_y + node->height + 20 * scale_factor < ozone->dimensions.header_height + ozone->dimensions.entry_padding_vertical)
+      if (y + scroll_y + node->height + 20 * scale_factor < CONTENT_TOP_PAD * ozone->last_scale_factor + ozone->dimensions.entry_padding_vertical)
       {
          y += node->height;
          continue;
@@ -12073,6 +12074,32 @@ static void ozone_frame(void *data, video_frame_info_t *video_info)
             libretro_running,
             menu_framebuffer_opacity,
             &mymat);
+
+   /* Top fade overlay — drawn after entries so they fade into background  渐变 */
+   {
+      float fade_left  = ozone->sidebar_offset + ozone->dimensions_sidebar_width;
+      float fade_top   = ozone->dimensions.header_height
+                       + ozone->dimensions.spacer_1px;
+      float fade_bot   = fade_top
+                       + CONTENT_TOP_PAD * ozone->last_scale_factor
+                       + ozone->dimensions.spacer_1px
+                       + ozone->dimensions.entry_padding_vertical;
+      float fade_color[16] = {
+         0.188f, 0.188f, 0.188f, 0.0f,
+         0.188f, 0.188f, 0.188f, 0.0f,
+         0.188f, 0.188f, 0.188f, 1.0f,
+         0.188f, 0.188f, 0.188f, 1.0f,
+      };
+
+      gfx_display_draw_quad(
+            p_disp, userdata,
+            video_width, video_height,
+            (int)fade_left, (int)fade_top,
+            (unsigned)(video_width - fade_left),
+            (unsigned)(fade_bot - fade_top),
+            video_width, video_height,
+            fade_color, NULL);
+   }
 
    if (dispctx && dispctx->scissor_end)
       dispctx->scissor_end(userdata, video_width, video_height);
