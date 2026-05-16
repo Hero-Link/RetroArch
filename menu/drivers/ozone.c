@@ -3533,14 +3533,12 @@ static void ozone_draw_sidebar(
             (unsigned)ozone->dimensions_sidebar_width,
             video_height
                   - ozone->dimensions.header_height
-                  - ozone->dimensions.footer_height
                   - ozone->dimensions.spacer_1px);
 
    /* Background */
    sidebar_height = video_height
          - ozone->dimensions.header_height
-         - ozone->dimensions.sidebar_gradient_height * 2
-         - ozone->dimensions.footer_height;
+         - ozone->dimensions.sidebar_gradient_height * 2;
 
    if (sidebar_height)
    {
@@ -3578,7 +3576,6 @@ static void ozone_draw_sidebar(
             video_height,
             ozone->sidebar_offset,
             video_height
-                  - ozone->dimensions.footer_height
                   - ozone->dimensions.sidebar_gradient_height,
             (unsigned)ozone->dimensions_sidebar_width,
             ozone->dimensions.sidebar_gradient_height,
@@ -6599,7 +6596,6 @@ static void ozone_draw_thumbnail_bar(
             video_height,
             x_position,
             video_height
-                  - ozone->dimensions.footer_height
                   - ozone->dimensions.sidebar_gradient_height,
             (unsigned)ozone->animations.thumbnail_bar_position,
             ozone->dimensions.sidebar_gradient_height,
@@ -11028,21 +11024,24 @@ static void ozone_draw_footer(
    ozone->footer_labels.metadata_override.x     = ozone->footer_labels.manage.x
          - ozone->footer_labels.metadata_override.width - icon_spacer;
 
-   /* Separator */
+   /* Separator — starts from right edge of sidebar */
    if (separator)
+   {
+      float footer_left = ozone->sidebar_offset + ozone->dimensions_sidebar_width;
       gfx_display_draw_quad(
             p_disp,
             userdata,
             video_width,
             video_height,
-            ((separator == OZONE_HEADER_SEPARATOR_NORMAL) ? separator_margin : 0),
+            (int)footer_left,
             video_height - ozone->dimensions.footer_height,
-            video_width - ((separator == OZONE_HEADER_SEPARATOR_NORMAL) ? (separator_margin * 2) : 0),
+            (unsigned)(video_width - footer_left),
             ozone->dimensions.spacer_1px,
             video_width,
             video_height,
             ozone->theme->header_footer_separator,
             NULL);
+   }
 
    /* Buttons */
 
@@ -11587,7 +11586,7 @@ static void ozone_draw_footer(
          gfx_display_draw_text(
                ozone->fonts.footer.font,
                core_title_buf,
-               ticker_x_offset + footer_margin,
+               ticker_x_offset + ozone->sidebar_offset + ozone->dimensions_sidebar_width + footer_margin,
                footer_text_y,
                video_width,
                video_height,
@@ -11599,6 +11598,8 @@ static void ozone_draw_footer(
                false);
       }
    }
+
+
 #ifdef HAVE_LIBNX
    else if (ozone->theme->name)
    {
@@ -11615,7 +11616,7 @@ static void ozone_draw_footer(
                   69 * scale_factor,
                   30 * scale_factor,
                   ozone->theme->textures[OZONE_THEME_TEXTURE_SWITCH],
-                  footer_margin,
+                  ozone->sidebar_offset + ozone->dimensions_sidebar_width + footer_margin,
                   video_height - ozone->dimensions.footer_height / 2 - 15 * scale_factor,
                   video_width,
                   video_height,
