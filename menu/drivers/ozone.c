@@ -80,6 +80,7 @@
 #define HEADER_HEIGHT                 87
 #define FOOTER_HEIGHT                 78
 #define CONTENT_TOP_PAD               40              //右边选择栏初始位置距顶部距离
+#define SIDEBAR_BOTTOM_PAD            24              //左边栏最后一项距底部距离
 
 #define ENTRY_PADDING_HORIZONTAL_HALF 40
 #define ENTRY_PADDING_HORIZONTAL_FULL 130
@@ -3611,9 +3612,8 @@ static void ozone_draw_sidebar(
    /* Bottom-align: leave one entry height below last item */
    {
       int bottom_max  = (int)video_height
-                      - (int)ozone->dimensions.footer_height
                       - (int)ozone->dimensions.sidebar_gradient_height
-                      - (int)ozone->dimensions.sidebar_entry_height;
+                      - SIDEBAR_BOTTOM_PAD * ozone->last_scale_factor;
       int y_shift = bottom_max - (int)y;
       if (y_shift > 0)
       {
@@ -3664,9 +3664,8 @@ static void ozone_draw_sidebar(
                         ? ozone->dimensions.sidebar_entry_padding_vertical + ozone->dimensions.spacer_1px
                         : 0);
       float bottom_max = (int)video_height
-                       - (int)ozone->dimensions.footer_height
                        - (int)ozone->dimensions.sidebar_gradient_height
-                       - (int)ozone->dimensions.sidebar_entry_height;
+                       - SIDEBAR_BOTTOM_PAD * ozone->last_scale_factor;
       y = bottom_max - total_h;
       if (y < top_y) y = top_y;
    }
