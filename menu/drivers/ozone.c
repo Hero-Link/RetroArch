@@ -78,9 +78,9 @@
 #define FONT_SIZE_SIDEBAR             24
 
 #define HEADER_HEIGHT                 87
-#define FOOTER_HEIGHT                 78
+#define FOOTER_HEIGHT                 60              //底栏高度
 #define CONTENT_TOP_PAD               40              //右边选择栏初始位置距顶部距离
-#define SIDEBAR_BOTTOM_PAD            24              //左边栏最后一项距底部距离
+#define SIDEBAR_BOTTOM_PAD            20              //左边栏最后一项距底部距离
 
 #define ENTRY_PADDING_HORIZONTAL_HALF 40
 #define ENTRY_PADDING_HORIZONTAL_FULL 130
@@ -95,7 +95,7 @@
 #define SIDEBAR_WIDTH                 408
 #define SIDEBAR_X_PADDING             12        //左侧图标外边距
 #define SIDEBAR_Y_PADDING             20
-#define SIDEBAR_ENTRY_HEIGHT          50
+#define SIDEBAR_ENTRY_HEIGHT          45
 #define SIDEBAR_ENTRY_Y_PADDING       10
 #define SIDEBAR_ENTRY_ICON_SIZE       46
 #define SIDEBAR_ENTRY_ICON_PADDING    15
@@ -6613,7 +6613,7 @@ static void ozone_draw_thumbnail_bar(
             ozone->dimensions.sidebar_gradient_height,
             video_width,
             video_height,
-            ozone->sidebar_top_gradient,
+            ozone->theme->background,
             NULL);
       gfx_display_draw_quad(
             p_disp,
@@ -6627,7 +6627,7 @@ static void ozone_draw_thumbnail_bar(
             sidebar_height,
             video_width,
             video_height,
-            ozone->sidebar_background,
+            ozone->theme->background,
             NULL);
       gfx_display_draw_quad(
             p_disp,
@@ -6641,7 +6641,7 @@ static void ozone_draw_thumbnail_bar(
             ozone->dimensions.sidebar_gradient_height,
             video_width,
             video_height,
-            ozone->sidebar_bottom_gradient,
+            ozone->theme->background,
             NULL);
    }
 
