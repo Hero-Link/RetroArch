@@ -97,7 +97,7 @@
 #define SIDEBAR_Y_PADDING             20
 #define SIDEBAR_ENTRY_HEIGHT          45
 #define SIDEBAR_ENTRY_Y_PADDING       10
-#define SIDEBAR_ENTRY_ICON_SIZE       46
+#define SIDEBAR_ENTRY_ICON_SIZE       40        //左侧栏图标大小
 #define SIDEBAR_ENTRY_ICON_PADDING    15
 #define SIDEBAR_GRADIENT_HEIGHT       28
 
@@ -3588,9 +3588,14 @@ static void ozone_draw_sidebar(
    }
 
    /* Tabs */
+   /* When cursor is not in console tabs, only account for 1 console entry */
+   unsigned visible_consoles = horizontal_list_size;
+   if (ozone->categories_selection_ptr <= ozone->system_tab_end && horizontal_list_size > 0)
+      visible_consoles = 1;
+
    /* y offset computation */
    y = ozone->dimensions.header_height + ozone->dimensions.spacer_1px + ozone->dimensions.sidebar_padding_vertical;
-   for (i = 0; i < ozone->system_tab_end + horizontal_list_size + 1; i++)
+   for (i = 0; i < ozone->system_tab_end + visible_consoles + 1; i++)
    {
       if (i == ozone->categories_selection_ptr)
          selection_y = (unsigned)y;
@@ -3601,7 +3606,7 @@ static void ozone_draw_sidebar(
       y += ozone->dimensions.sidebar_entry_height + ozone->dimensions.sidebar_entry_padding_vertical;
 
       /* Separator between system tabs and console tabs */
-      if (i == (unsigned)ozone->system_tab_end && horizontal_list_size > 0)
+      if (i == (unsigned)ozone->system_tab_end && visible_consoles > 0)
          y += ozone->dimensions.sidebar_entry_padding_vertical + ozone->dimensions.spacer_1px;
    }
 
@@ -3697,10 +3702,10 @@ static void ozone_draw_sidebar(
       float top_y  = ozone->dimensions.header_height
                    + ozone->dimensions.spacer_1px
                    + ozone->dimensions.sidebar_padding_vertical;
-      int total    = (int)(ozone->system_tab_end + 1 + horizontal_list_size);
+      int total    = (int)(ozone->system_tab_end + 1 + visible_consoles);
       float total_h = total * (ozone->dimensions.sidebar_entry_height
                              + ozone->dimensions.sidebar_entry_padding_vertical)
-                    + (horizontal_list_size > 0
+                    + (visible_consoles > 0
                         ? ozone->dimensions.sidebar_entry_padding_vertical + ozone->dimensions.spacer_1px
                         : 0);
       float bottom_max = (int)video_height
@@ -3849,7 +3854,7 @@ static void ozone_draw_sidebar(
       if (dispctx && dispctx->blend_begin)
          dispctx->blend_begin(userdata);
 
-      for (i = 0; i < horizontal_list_size; i++)
+      for (i = 0; i < visible_consoles; i++)
       {
          float tab_y_screen;
          ozone_node_t *node   = (ozone_node_t*)ozone->horizontal_list.list[i].userdata;
