@@ -4283,7 +4283,7 @@ static bool ozone_want_collapse(ozone_handle_t *ozone,
       bool is_playlist)
 {
    return (ozone_collapse_sidebar)
-         || (is_playlist && (!(ozone->flags & OZONE_FLAG_CURSOR_IN_SIDEBAR)));
+         || (!(ozone->flags & OZONE_FLAG_CURSOR_IN_SIDEBAR));
 }
 
 static void ozone_sidebar_update_collapse(ozone_handle_t *ozone,
